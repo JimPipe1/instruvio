@@ -1,0 +1,217 @@
+
+  .walk-head {
+    max-width: var(--container-narrow);
+  }
+
+  .walk-lede {
+    margin-top: var(--space-lg);
+    color: var(--text-muted);
+    font-size: var(--step-1);
+  }
+
+  .walk-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-lg);
+    margin: var(--space-xl) 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  .walk-facts strong {
+    color: var(--text);
+    font-family: var(--font-heading);
+  }
+
+  .walk {
+    margin-top: var(--space-2xl);
+  }
+
+  /* ----------------------------------------------------------------- stage */
+
+  .stage {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+    box-shadow: var(--shadow);
+  }
+
+  .stage__bar {
+    padding: var(--space-lg) var(--space-lg) var(--space-md);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prog {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 100px;
+    background: var(--surface);
+  }
+
+  .prog__fill {
+    width: 0;
+    height: 100%;
+    border-radius: 100px;
+    background: var(--accent);
+    transition: width var(--transition);
+  }
+
+  .prog__text {
+    margin-top: var(--space-xs);
+    color: var(--text-faint);
+    font-size: var(--step--1);
+  }
+
+  .steps {
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  /* Without JavaScript the steps stack as a document. */
+  .wstep + .wstep {
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-2xl);
+    border-top: 1px solid var(--border);
+  }
+
+  .is-interactive .wstep + .wstep {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .wstep {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+    align-items: center;
+  }
+
+  /* Phone: the illustration leads, then the app screen, then the words. */
+  .wstep__life {
+    order: -1;
+    max-height: 14rem;
+  }
+
+  /* Tablet: app screen and words side by side, illustration underneath. */
+  @media (min-width: 48rem) {
+    .wstep {
+      grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+      gap: var(--space-2xl);
+    }
+
+    .wstep__life {
+      order: 0;
+      grid-column: 1 / -1;
+      max-height: 18rem;
+    }
+  }
+
+  /* Laptop: app screen, words, and a full-height illustration on the right. */
+  @media (min-width: 74rem) {
+    .wstep {
+      grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) minmax(0, 22.5rem);
+      align-items: stretch;
+      min-height: 32rem;
+    }
+
+    .wstep__phone {
+      align-self: center;
+    }
+
+    .wstep__life {
+      grid-column: auto;
+      align-self: stretch;
+      max-height: none;
+    }
+  }
+
+  .wstep__count {
+    color: var(--accent);
+    font-family: var(--font-heading);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .wstep__title {
+    margin-top: var(--space-sm);
+    font-size: var(--step-2);
+  }
+
+  .wstep__title:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 6px;
+  }
+
+  .wstep__voice {
+    margin-top: var(--space-lg);
+    padding-left: var(--space-lg);
+    border-left: 4px solid var(--accent);
+    color: var(--text);
+    font-size: var(--step-1);
+    font-style: italic;
+  }
+
+  .wstep__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin: var(--space-lg) 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+  }
+
+  .wstep__body li {
+    position: relative;
+    padding-left: 1.4em;
+  }
+
+  .wstep__body li::before {
+    content: '';
+    position: absolute;
+    top: 0.62em;
+    left: 0;
+    width: 12px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  .wstep__note {
+    margin-top: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+    font-weight: 600;
+  }
+
+  .stage__controls {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    border-top: 1px solid var(--border);
+    background: var(--bg-raised);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+
+  .stage__controls button[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .walk-note {
+    margin-top: var(--space-xl);
+    color: var(--text-faint);
+    font-size: var(--step--1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prog__fill {
+      transition: none;
+    }
+  }

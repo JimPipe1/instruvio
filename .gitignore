@@ -1,0 +1,41 @@
+# Build output and dependencies
+dist/
+.astro/
+node_modules/
+
+# Environment and local tooling
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+.vercel/
+
+# ---------------------------------------------------------------------------
+# Film masters.
+#
+# The mp4s in public/media are the local copies of films that are served from
+# Vimeo on the live site. Nothing in src/ references them any more — the
+# `video:` lines in the project Markdown are commented out — so they would
+# otherwise be ~190 MB uploaded to GitHub and redeployed on every push for no
+# benefit. They stay on this machine instead.
+#
+# IMPORTANT: being ignored means they are NOT backed up by the repo. Keep
+# another copy somewhere, or the only masters are on this disk.
+#
+# heroVideo.mp4 is the exception: it is the home page background and has to
+# ship with the site.
+# ---------------------------------------------------------------------------
+public/**/*.mp4
+!public/media/heroVideo.mp4
+
+# Originals kept before re-encoding. Same reasoning: local reference copies —
+# every one of these has a smaller, optimised version already in public/media,
+# so the repo would just be carrying two copies of the same pictures.
+_archive/media-originals/
+
+# Scratch from working sessions. The PDFs in here are duplicates of docs/.
+Claude outputs/
+
+# Scratch files from editor and tooling sessions
+.pc*.cjs

@@ -1,0 +1,109 @@
+---
+/**
+ * STANDALONE PAGES — one per Markdown file in src/content/pages/.
+ *
+ * `about.md` becomes /about/, `process.md` becomes /process/, and so on.
+ * Add `nav: true` to the file's frontmatter and it joins the header menu too.
+ *
+ * Adding a page is therefore a one-file job — no routing to wire up.
+ */
+import { render, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import MediaFrame from '../components/MediaFrame.astro';
+import { getPages } from '../lib/content.ts';
+
+export async function getStaticPaths() {
+  const pages = await getPages();
+  return pages.map((page) => ({
+    params: { slug: page.id },
+    props: page,
+  }));
+}
+
+type Props = CollectionEntry<'pages'>;
+
+const page = Astro.props;
+const { title, description, eyebrow, hero, video, vimeo, vimeoRatio, seoTitle, metaDescription } =
+  page.data;
+const { Content } = await render(page);
+---
+
+<Base
+  title={seoTitle ?? title}
+  description={description}
+  metaDescription={metaDescription}
+  image={hero}
+  imageAlt={hero ? title : undefined}
+  ogType={vimeo || video ? 'video.other' : 'website'}
+>
+  <article class="section">
+    <div class="container">
+      <header class="page-head">
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+        <h1>{title}</h1>
+        <p class="page-head__lede">{description}</p>
+      </header>
+
+      {
+        hero && (
+          <div class="page-hero">
+            {
+              /*
+               * One frame for all three cases. A Vimeo film previews on hover:
+               * the `hero` still holds the space, and the player is built the
+               * moment the pointer arrives and thrown away when it leaves, so
+               * it runs silently and without controls. A local mp4 still plays
+               * through once on arrival; with neither, the still just sits.
+               *
+               * The shape follows the source. A still is cropped to fit, so the
+               * 21/9 strip suits it, but a player cannot be cropped — so a film
+               * gets its own `vimeoRatio`, or 16/9 if none is given.
+               *
+               * A banner is hovered deliberately rather than swept past, so it
+               * answers quickly: 150ms instead of the 400ms the cards use.
+               */
+            }
+            <MediaFrame
+              image={hero}
+              video={video}
+              vimeo={vimeo}
+              alt=""
+              ratio={vimeo ? (vimeoRatio ?? '16 / 9') : '21 / 9'}
+              mode={vimeo ? 'hover' : video ? 'once' : 'still'}
+              fade={vimeo ? '150ms' : undefined}
+              loading="eager"
+            />
+          </div>
+        )
+      }
+
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+
+  .page-head {
+    max-width: var(--container-narrow);
+  }
+
+  .page-head__lede {
+    margin-top: var(--space-lg);
+    color: var(--text-muted);
+    font-size: var(--step-2);
+    line-height: 1.4;
+  }
+
+  .page-hero {
+    margin-block: var(--space-2xl);
+  }
+
+  /* Without a hero image, the body copy still needs separating from the title. */
+  .page-head + .prose {
+    margin-top: var(--space-2xl);
+  }
+</style>
+

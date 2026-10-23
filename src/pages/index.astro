@@ -1,0 +1,110 @@
+---
+/**
+ * HOME PAGE
+ *
+ * This file contains no content of its own. It reads HOME_SECTIONS from
+ * src/site.config.ts and renders each block with the matching component, in
+ * the order listed there.
+ *
+ * To change the home page, edit HOME_SECTIONS — not this file.
+ * To invent a brand new kind of section: build the component, then add it to
+ * the SECTIONS map below and to the HomeSection type in site.config.ts.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/sections/Hero.astro';
+import Featured from '../components/sections/Featured.astro';
+import Stats from '../components/sections/Stats.astro';
+import Capabilities from '../components/sections/Capabilities.astro';
+import Process from '../components/sections/Process.astro';
+import Team from '../components/sections/Team.astro';
+import Clients from '../components/sections/Clients.astro';
+import CTA from '../components/sections/CTA.astro';
+import { SITE, CONTACT, SOCIAL, HOME_SECTIONS, type HomeSection } from '../site.config.ts';
+
+/**
+ * Maps a section's `type` to the component that renders it.
+ *
+ * Typed loosely on purpose: each component takes a different set of props, and
+ * TypeScript cannot narrow a spread of the HomeSection union down to the one
+ * component it is about to be handed. The schema in site.config.ts is what
+ * keeps the two sides honest.
+ */
+const SECTIONS: Record<HomeSection['type'], any> = {
+  hero: Hero,
+  featured: Featured,
+  stats: Stats,
+  capabilities: Capabilities,
+  process: Process,
+  team: Team,
+  clients: Clients,
+  cta: CTA,
+};
+/* ---------------------------------------------------------------------------
+ * Structured data for the studio itself.
+ *
+ * This is what a knowledge panel is built from: who you are, where you work,
+ * and which profiles elsewhere are also you. `sameAs` stays empty until the
+ * SOCIAL list in site.config.ts has entries, because an empty array says more
+ * clearly than a fabricated one that there is nothing to link yet.
+ * ------------------------------------------------------------------------ */
+
+const organisationSchema = {
+  '@context': 'https://schema.org',
+  /*
+   * Organization, not ProfessionalService. The latter is a LocalBusiness
+   * subtype, and Google requires a real PostalAddress on those — a studio
+   * with no walk-in premises has nothing honest to put there. Switch to
+   * 'ProfessionalService' and add a full address if that ever changes.
+   */
+  '@type': 'Organization',
+  '@id': new URL('/#studio', SITE.url).href,
+  name: SITE.name,
+  description: SITE.description,
+  url: SITE.url,
+  logo: new URL('/media/instruvio-logo.png', SITE.url).href,
+  image: new URL('/media/og-default.jpg', SITE.url).href,
+  email: CONTACT.email,
+  ...(CONTACT.phone ? { telephone: CONTACT.phone } : {}),
+  areaServed: CONTACT.location,
+  knowsAbout: [
+    'Explainer video',
+    'CPD and e-learning video',
+    'Motion graphics',
+    '3D architectural visualisation',
+    'Instructional design',
+  ],
+  ...(SOCIAL.length > 0 ? { sameAs: SOCIAL.map((s) => s.href) } : {}),
+};
+
+/* Lets Google show the site name rather than the bare domain in results. */
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.name,
+  url: SITE.url,
+  publisher: { '@id': new URL('/#studio', SITE.url).href },
+};
+---
+
+<Base
+  title={SITE.name}
+  description={SITE.description}
+  imageAlt={`${SITE.name} — ${SITE.tagline}`}
+  jsonLd={[organisationSchema, websiteSchema]}
+>
+  {
+    HOME_SECTIONS.map((section) => {
+      const { type, ...props } = section;
+      const Section = SECTIONS[type];
+
+      // A typo in a section's `type` skips that block instead of failing the
+      // whole build. The warning shows in the terminal running `npm run dev`.
+      if (!Section) {
+        console.warn(`[home] Unknown section type "${type}" — skipped.`);
+        return null;
+      }
+
+      return <Section {...props} />;
+    })
+  }
+</Base>

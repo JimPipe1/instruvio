@@ -1,0 +1,61 @@
+---
+/**
+ * The page shell every route is wrapped in: <head>, header, main, footer.
+ * Pass the page's own content in as children.
+ */
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Meta description only, when it should differ from the on-page lede. */
+  metaDescription?: string;
+  image?: string;
+  imageAlt?: string;
+  /** Open Graph type; 'video.other' for a page built around a film. */
+  ogType?: string;
+  noindex?: boolean;
+  /** Structured data blocks for this page. See BaseHead for what they do. */
+  jsonLd?: Record<string, unknown>[];
+  /** Adds a class to <main>, used to let the hero sit under the header. */
+  mainClass?: string;
+}
+
+const {
+  title,
+  description,
+  metaDescription,
+  image,
+  imageAlt,
+  ogType,
+  noindex,
+  jsonLd,
+  mainClass,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en-IE">
+  <head>
+    <BaseHead
+      title={title}
+      description={description}
+      metaDescription={metaDescription}
+      image={image}
+      imageAlt={imageAlt}
+      ogType={ogType}
+      noindex={noindex}
+      jsonLd={jsonLd}
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header />
+    <main id="main" class={mainClass}>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

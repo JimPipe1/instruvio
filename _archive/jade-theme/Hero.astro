@@ -1,0 +1,131 @@
+---
+/**
+ * Full-bleed opening section. Driven by the { type: 'hero' } block in
+ * src/site.config.ts.
+ */
+import MediaFrame from '../MediaFrame.astro';
+import { withBase } from '../../lib/content.ts';
+import type { Link } from '../../site.config.ts';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  body?: string;
+  primaryCta?: Link;
+  secondaryCta?: Link;
+  poster?: string;
+  video?: string;
+}
+
+const { eyebrow, title, body, primaryCta, secondaryCta, poster, video } = Astro.props;
+---
+
+<section class="hero">
+  {
+    poster && (
+      <div class="hero__bg">
+        <MediaFrame
+          image={poster}
+          video={video}
+          alt=""
+          ratio="16 / 9"
+          mode={video ? 'auto' : 'still'}
+          loading="eager"
+          class="hero__media"
+        />
+      </div>
+    )
+  }
+
+  <div class="container hero__inner">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1 class="hero__title">{title}</h1>
+    {body && <p class="hero__body">{body}</p>}
+
+    {
+      (primaryCta || secondaryCta) && (
+        <div class="hero__actions">
+          {primaryCta && (
+            <a class="btn" href={withBase(primaryCta.href)}>
+              {primaryCta.label}
+            </a>
+          )}
+          {secondaryCta && (
+            <a class="btn btn--secondary" href={withBase(secondaryCta.href)}>
+              {secondaryCta.label}
+            </a>
+          )}
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    /* Tall enough to feel like an opening statement, but never taller than
+       the screen — `svh` accounts for mobile browser toolbars. */
+    min-height: min(42rem, 88svh);
+    padding-block: var(--space-3xl);
+    overflow: hidden;
+    background: var(--bg-sunken);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero__bg :global(.hero__media) {
+    width: 100%;
+    height: 100%;
+    /* Override the component's own aspect-ratio: here it must fill the box. */
+    aspect-ratio: auto;
+    border-radius: 0;
+  }
+
+  /* Wash the media with white so dark text stays readable over any frame of
+     it. The wash is heavier at the bottom and left, where the text sits. */
+  .hero__bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, var(--bg) 2%, rgb(255 255 255 / 78%) 45%, rgb(255 255 255 / 45%) 100%),
+      linear-gradient(to right, rgb(255 255 255 / 88%) 0%, transparent 70%);
+  }
+
+  .hero__inner {
+    position: relative; /* sit above the white wash */
+    z-index: 1;
+  }
+
+  .hero__title {
+    max-width: 18ch;
+    font-size: var(--step-5);
+  }
+
+  .hero__body {
+    max-width: 46ch;
+    margin-top: var(--space-lg);
+    color: var(--text-muted);
+    font-size: var(--step-1);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+  }
+
+  /* On a narrow phone, buttons go full width and stack — much easier to tap. */
+  @media (max-width: 26rem) {
+    .hero__actions :global(.btn) {
+      width: 100%;
+    }
+  }
+</style>

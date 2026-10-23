@@ -1,0 +1,97 @@
+---
+/**
+ * Everything that belongs in <head>: metadata, social share tags and the
+ * global stylesheet. Rendered once per page by the Base layout.
+ */
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+import { SITE } from '../site.config.ts';
+import { withBase } from '../lib/content.ts';
+
+interface Props {
+  title: string;
+  description?: string;
+  /**
+   * Overrides `description` for the meta tag only. Search engines cut the
+   * description off around 155 characters, while the on-page lede often wants
+   * to be longer, so the two are allowed to differ.
+   */
+  metaDescription?: string;
+  /** Social share image, a path inside `public/`. */
+  image?: string;
+  /** Describes the share image for screen readers and for Open Graph. */
+  imageAlt?: string;
+  /**
+   * Open Graph type. 'website' suits most pages; a page built around a film
+   * should send 'video.other', which makes Slack and LinkedIn render a video
+   * card rather than a plain link.
+   */
+  ogType?: string;
+  /** Set true on pages that should be kept out of search results. */
+  noindex?: boolean;
+  /**
+   * Structured data for this page, as plain objects. Each one is emitted as
+   * its own <script type="application/ld+json">. This is the only thing that
+   * tells Google what a page is about beyond its prose — above all that an
+   * embedded player holds a film, which it otherwise cannot see.
+   */
+  jsonLd?: Record<string, unknown>[];
+}
+
+const {
+  title,
+  description = SITE.description,
+  metaDescription,
+  image = '/media/og-default.jpg',
+  imageAlt,
+  ogType = 'website',
+  noindex = false,
+  jsonLd = [],
+} = Astro.props;
+
+// Trailing whitespace from a Markdown block scalar would otherwise end up
+// inside the tag, and an over-long description is cut off mid-word in results.
+const metaDesc = (metaDescription ?? description).trim();
+
+// The home page shows the brand on its own; every other page is suffixed.
+const fullTitle = title === SITE.name ? `${SITE.name} — ${SITE.tagline}` : `${title} — ${SITE.name}`;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const socialImage = new URL(withBase(image), Astro.site);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+<meta name="theme-color" content="#000000" />
+
+<title>{fullTitle}</title>
+<meta name="description" content={metaDesc} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+<link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+
+<!-- Self-hosted fonts, preloaded so headings do not reflow on first paint. -->
+<Font cssVariable="--font-display" preload />
+<Font cssVariable="--font-body" preload />
+
+<!-- Social sharing -->
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content={SITE.name} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={metaDesc} />
+<meta property="og:locale" content="en_IE" />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={socialImage} />
+{imageAlt && <meta property="og:image:alt" content={imageAlt} />}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={metaDesc} />
+<meta name="twitter:image" content={socialImage} />
+{imageAlt && <meta name="twitter:image:alt" content={imageAlt} />}
+
+<!-- Structured data. One script per block, so an invalid one cannot take
+     the others down with it. -->
+{jsonLd.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block)} />)}

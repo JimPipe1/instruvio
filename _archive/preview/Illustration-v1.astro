@@ -1,0 +1,501 @@
+---
+/**
+ * ILLUSTRATIONS FOR THE TRAINING MODULE
+ *
+ * Original flat vector scenes, drawn on a 480 × 320 grid and coloured with the
+ * site's palette tokens, so they follow any colour change in global.css.
+ *
+ * To add a scene: add an entry to SCENES below and use its key as the
+ * `graphic` value of a slide in src/lib/training/manual-handling.ts.
+ * A key that does not exist falls back to a plain frame rather than breaking
+ * the build.
+ */
+interface Props {
+  name: string;
+  alt: string;
+  class?: string;
+}
+
+const { name, alt, class: className } = Astro.props;
+
+const INK = 'var(--text)';
+const OCEAN = 'var(--ocean)';
+const RUBY = 'var(--ruby)';
+const TANG = 'var(--tangerine)';
+const EMERALD = 'var(--emerald)';
+const ICE = 'var(--ice)';
+const SKIN = '#f3d3bd';
+const WHITE = '#ffffff';
+
+/* --- building blocks ----------------------------------------------------- */
+
+/** Ground line with a soft shadow, so figures do not float. */
+const floor = (y = 268) =>
+  `<line x1="24" y1="${y}" x2="456" y2="${y}" stroke="${INK}" stroke-opacity="0.18" stroke-width="3" stroke-linecap="round"/>`;
+
+/**
+ * A worker, drawn from a named pose. The torso is one thick stroke (the
+ * hi-vis vest), the limbs are thinner strokes, and the hard hat is a cap over
+ * the head circle. Everything lives in a 100 × 150 box with the feet at y=150.
+ */
+function worker(pose: string, opts: { x?: number; y?: number; s?: number; flip?: boolean } = {}) {
+  const { x = 0, y = 0, s = 1, flip = false } = opts;
+
+  const head = (hx: number, hy: number) => `
+    <circle cx="${hx}" cy="${hy}" r="13" fill="${SKIN}"/>
+    <path d="M${hx - 15} ${hy - 3} a15 15 0 0 1 30 0 z" fill="${TANG}"/>
+    <rect x="${hx - 18}" y="${hy - 5}" width="36" height="5" rx="2.5" fill="${TANG}"/>`;
+
+  const limb = (d: string, colour = INK, width = 7) =>
+    `<path d="${d}" fill="none" stroke="${colour}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  const torso = (d: string) => limb(d, OCEAN, 20);
+
+  const poses: Record<string, string> = {
+    /* Upright, arms at the sides. */
+    stand: `
+      ${torso('M50 92 L50 52')}
+      ${head(50, 34)}
+      ${limb('M50 58 L42 80 L44 100')}
+      ${limb('M50 92 L44 120 L44 148')}
+      ${limb('M50 92 L58 120 L58 148')}`,
+
+    /* Knees bent, back straight, load held close — the correct lift. */
+    squat: `
+      ${limb('M42 96 L64 118 L40 146')}
+      ${torso('M42 96 L56 56')}
+      ${head(60, 38)}
+      ${limb('M54 64 L70 86 L74 104')}
+      ${limb('M42 96 L60 122 L34 146')}`,
+
+    /* Back rounded, legs straight — the lift to avoid. */
+    stoop: `
+      ${limb('M44 96 L46 122 L46 148')}
+      ${torso('M44 96 Q56 62 84 64')}
+      ${head(96, 62)}
+      ${limb('M80 70 L84 94 L86 112')}
+      ${limb('M44 96 L52 122 L52 148')}`,
+
+    /* Standing, load held against the body. */
+    carry: `
+      ${torso('M50 92 L50 52')}
+      ${head(50, 34)}
+      ${limb('M50 60 L64 72 L64 92')}
+      ${limb('M50 92 L44 120 L44 148')}
+      ${limb('M50 92 L58 120 L58 148')}`,
+
+    /* Leaning into a push, back leg extended. */
+    push: `
+      ${torso('M44 94 L62 58')}
+      ${head(68, 42)}
+      ${limb('M60 64 L80 70 L92 76')}
+      ${limb('M44 94 L60 120 L66 146')}
+      ${limb('M44 94 L28 120 L18 146')}`,
+
+    /* One hand raised in thought. */
+    think: `
+      ${torso('M50 92 L50 52')}
+      ${head(50, 34)}
+      ${limb('M50 58 L64 66 L58 48')}
+      ${limb('M50 92 L44 120 L44 148')}
+      ${limb('M50 92 L58 120 L58 148')}`,
+
+    /* Gentle stretch, arms overhead. */
+    stretch: `
+      ${torso('M50 92 L50 52')}
+      ${head(50, 34)}
+      ${limb('M50 58 L64 40 L62 20')}
+      ${limb('M50 58 L36 40 L38 20')}
+      ${limb('M50 92 L42 120 L42 148')}
+      ${limb('M50 92 L60 120 L60 148')}`,
+
+    /* Hand pressed to the lower back. */
+    ache: `
+      ${torso('M50 92 L52 52')}
+      ${head(52, 34)}
+      ${limb('M52 60 L66 76 L56 86')}
+      ${limb('M50 92 L44 120 L44 148')}
+      ${limb('M50 92 L58 120 L58 148')}`,
+  };
+
+  const body = poses[pose] ?? poses.stand;
+  const mirror = flip ? `translate(100 0) scale(-1 1)` : '';
+
+  return `<g transform="translate(${x} ${y}) scale(${s})"><g transform="${mirror}">${body}</g></g>`;
+}
+
+/** A cardboard box. */
+const box = (x: number, y: number, w = 56, h = 46, tone = ICE) => `
+  <g>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${tone}" stroke="${INK}" stroke-opacity="0.35" stroke-width="2"/>
+    <line x1="${x + w / 2}" y1="${y}" x2="${x + w / 2}" y2="${y + h}" stroke="${INK}" stroke-opacity="0.25" stroke-width="2"/>
+  </g>`;
+
+/** Green tick badge — "do it this way". */
+const tick = (x: number, y: number, r = 20) => `
+  <g>
+    <circle cx="${x}" cy="${y}" r="${r}" fill="${EMERALD}"/>
+    <path d="M${x - r * 0.45} ${y} l${r * 0.35} ${r * 0.38} l${r * 0.6} -${r * 0.72}" fill="none" stroke="${WHITE}" stroke-width="${r * 0.22}" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>`;
+
+/** Red cross badge — "not this way". */
+const cross = (x: number, y: number, r = 20) => `
+  <g>
+    <circle cx="${x}" cy="${y}" r="${r}" fill="${RUBY}"/>
+    <path d="M${x - r * 0.4} ${y - r * 0.4} l${r * 0.8} ${r * 0.8} M${x + r * 0.4} ${y - r * 0.4} l-${r * 0.8} ${r * 0.8}" fill="none" stroke="${WHITE}" stroke-width="${r * 0.22}" stroke-linecap="round"/>
+  </g>`;
+
+/** A document or form. */
+const sheet = (x: number, y: number, w = 96, h = 120, lines = 5) => {
+  const rows = Array.from({ length: lines })
+    .map(
+      (_, i) =>
+        `<line x1="${x + 14}" y1="${y + 30 + i * 16}" x2="${x + w - 14}" y2="${y + 30 + i * 16}" stroke="${INK}" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/>`,
+    )
+    .join('');
+  return `
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${WHITE}" stroke="${INK}" stroke-opacity="0.35" stroke-width="2"/>
+    <rect x="${x + 14}" y="${y + 12}" width="${w * 0.45}" height="7" rx="3.5" fill="${OCEAN}"/>
+    ${rows}`;
+};
+
+/** Trolley / sack truck. */
+const trolley = (x: number, y: number) => `
+  <g>
+    <path d="M${x} ${y} l0 74" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>
+    <path d="M${x} ${y + 74} l38 0" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="${x + 6}" cy="${y + 84}" r="11" fill="${INK}"/>
+    <circle cx="${x + 6}" cy="${y + 84}" r="4" fill="${WHITE}"/>
+  </g>`;
+
+/** Short arrow, for direction of travel or movement. */
+const arrow = (x: number, y: number, len = 60, colour = OCEAN) => `
+  <g>
+    <line x1="${x}" y1="${y}" x2="${x + len}" y2="${y}" stroke="${colour}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M${x + len - 12} ${y - 9} l12 9 l-12 9" fill="none" stroke="${colour}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>`;
+
+/** Label chip, used to name parts of a scene. */
+const chip = (x: number, y: number, text: string, colour = OCEAN) => `
+  <g>
+    <rect x="${x}" y="${y}" width="${Math.max(54, text.length * 10.5 + 26)}" height="28" rx="14" fill="${colour}"/>
+    <text x="${x + 13}" y="${y + 19}" fill="${WHITE}" font-family="var(--font-heading)" font-size="13" font-weight="700" letter-spacing="0.04em">${text}</text>
+  </g>`;
+
+/* --- the scenes ---------------------------------------------------------- */
+
+const SCENES: Record<string, string> = {
+  welcome: `
+    ${floor()}
+    ${worker('stand', { x: 120, y: 118, s: 1 })}
+    ${worker('carry', { x: 250, y: 118, s: 1, flip: true })}
+    ${box(268, 186, 52, 40)}
+    ${chip(170, 60, 'MANUAL HANDLING')}`,
+
+  definition: `
+    ${floor()}
+    ${worker('carry', { x: 90, y: 118 })}
+    ${box(146, 186, 50, 40)}
+    ${worker('push', { x: 250, y: 118 })}
+    ${trolley(350, 176)}
+    ${arrow(388, 150, 54)}`,
+
+  injury: `
+    ${floor()}
+    ${worker('ache', { x: 170, y: 118, s: 1.1 })}
+    <g transform="translate(252 178)">
+      <path d="M0 0 l16 -6 l-6 16 l18 -4" fill="none" stroke="${RUBY}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    ${chip(300, 150, 'PAIN', RUBY)}`,
+
+  spine: `
+    <rect x="150" y="34" width="180" height="252" rx="16" fill="var(--bg-raised)"/>
+    <g transform="translate(240 60)">
+      ${Array.from({ length: 9 })
+        .map(
+          (_, i) =>
+            `<rect x="-22" y="${i * 24}" width="44" height="16" rx="6" fill="${ICE}" stroke="${INK}" stroke-opacity="0.35" stroke-width="2"/>
+             <rect x="-16" y="${i * 24 + 16}" width="32" height="7" rx="3.5" fill="${OCEAN}" opacity="0.65"/>`,
+        )
+        .join('')}
+      <path d="M-56 96 q-16 26 4 52" fill="none" stroke="${RUBY}" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 10"/>
+    </g>
+    ${chip(60, 150, 'DISC', OCEAN)}
+    ${chip(322, 96, 'VERTEBRA', OCEAN)}`,
+
+  law: `
+    ${sheet(96, 60, 120, 180, 6)}
+    ${tick(206, 214, 22)}
+    ${sheet(260, 84, 110, 156, 5)}
+    ${chip(96, 258, 'ACT 2005')}
+    ${chip(260, 258, 'REGS 2007')}`,
+
+  regs: `
+    ${sheet(120, 52, 150, 200, 7)}
+    <g transform="translate(286 176)">
+      <circle cx="0" cy="0" r="40" fill="none" stroke="${OCEAN}" stroke-width="9"/>
+      <line x1="28" y1="28" x2="58" y2="58" stroke="${OCEAN}" stroke-width="11" stroke-linecap="round"/>
+    </g>`,
+
+  avoid: `
+    ${floor()}
+    ${worker('stoop', { x: 60, y: 118 })}
+    ${box(150, 214, 44, 34)}
+    ${cross(120, 84, 20)}
+    ${worker('push', { x: 258, y: 118 })}
+    ${trolley(356, 172)}
+    ${box(362, 178, 52, 40)}
+    ${tick(310, 84, 20)}`,
+
+  assess: `
+    ${floor()}
+    ${worker('think', { x: 80, y: 118 })}
+    ${sheet(228, 82, 120, 160, 5)}
+    ${tick(336, 226, 18)}
+    ${arrow(186, 150, 34)}`,
+
+  training: `
+    ${floor()}
+    ${worker('stand', { x: 46, y: 118 })}
+    ${worker('stand', { x: 170, y: 126, s: 0.9 })}
+    ${worker('stand', { x: 274, y: 126, s: 0.9, flip: true })}
+    <rect x="120" y="54" width="230" height="52" rx="10" fill="${OCEAN}"/>
+    <text x="146" y="88" fill="#ffffff" font-family="var(--font-heading)" font-size="22" font-weight="700">TRAINING</text>`,
+
+  employee: `
+    ${floor()}
+    ${worker('carry', { x: 160, y: 118, s: 1.1 })}
+    ${box(222, 190, 50, 40)}
+    ${tick(300, 96, 22)}
+    ${chip(52, 92, 'FOLLOW THE SYSTEM')}`,
+
+  report: `
+    ${floor()}
+    ${worker('stand', { x: 70, y: 126, s: 0.95 })}
+    ${sheet(232, 70, 130, 170, 5)}
+    ${chip(232, 252, 'REPORT IT', RUBY)}
+    ${arrow(168, 150, 48)}`,
+
+  backcare: `
+    ${floor()}
+    ${worker('stretch', { x: 96, y: 118 })}
+    ${worker('stand', { x: 246, y: 118, flip: true })}
+    ${tick(200, 80, 20)}`,
+
+  tile: `
+    <g>
+      <rect x="40" y="44" width="180" height="104" rx="14" fill="${OCEAN}"/>
+      <text x="62" y="98" fill="#ffffff" font-family="var(--font-heading)" font-size="26" font-weight="700">T — Task</text>
+      <rect x="252" y="44" width="188" height="104" rx="14" fill="${RUBY}"/>
+      <text x="274" y="98" fill="#ffffff" font-family="var(--font-heading)" font-size="26" font-weight="700">I — Individual</text>
+      <rect x="40" y="170" width="180" height="104" rx="14" fill="${EMERALD}"/>
+      <text x="62" y="224" fill="#ffffff" font-family="var(--font-heading)" font-size="26" font-weight="700">L — Load</text>
+      <rect x="252" y="170" width="188" height="104" rx="14" fill="${TANG}"/>
+      <text x="274" y="224" fill="${INK}" font-family="var(--font-heading)" font-size="24" font-weight="700">E — Environ.</text>
+    </g>`,
+
+  task: `
+    ${floor()}
+    ${worker('stoop', { x: 70, y: 118 })}
+    ${box(164, 210, 44, 34)}
+    ${cross(130, 80, 20)}
+    ${worker('squat', { x: 250, y: 118, flip: true })}
+    ${box(268, 210, 44, 34)}
+    ${tick(330, 80, 20)}`,
+
+  individual: `
+    ${floor()}
+    ${worker('stand', { x: 176, y: 110, s: 1.15 })}
+    ${chip(30, 96, 'TRAINED?')}
+    ${chip(30, 148, 'FIT FOR IT?')}
+    ${chip(290, 96, 'FOOTWEAR?', EMERALD)}
+    ${chip(300, 148, 'GLOVES?', EMERALD)}`,
+
+  load: `
+    ${floor()}
+    ${box(150, 160, 110, 100, ICE)}
+    <text x="176" y="220" fill="${INK}" font-family="var(--font-heading)" font-size="26" font-weight="700">?kg</text>
+    ${chip(36, 70, 'HEAVY')}
+    ${chip(170, 44, 'AWKWARD', RUBY)}
+    ${chip(310, 70, 'UNSTABLE', TANG)}`,
+
+  environment: `
+    ${floor()}
+    <path d="M24 268 l90 0 l0 -34 l90 0 l0 -34 l90 0" fill="none" stroke="${INK}" stroke-opacity="0.35" stroke-width="5" stroke-linejoin="round"/>
+    ${worker('carry', { x: 60, y: 118, s: 0.9 })}
+    <g transform="translate(360 70)">
+      <circle cx="0" cy="0" r="22" fill="${TANG}"/>
+      ${Array.from({ length: 8 })
+        .map((_, i) => {
+          const a = (i * Math.PI) / 4;
+          return `<line x1="${Math.cos(a) * 30}" y1="${Math.sin(a) * 30}" x2="${Math.cos(a) * 40}" y2="${Math.sin(a) * 40}" stroke="${TANG}" stroke-width="5" stroke-linecap="round"/>`;
+        })
+        .join('')}
+    </g>
+    ${chip(226, 236, 'STEPS', RUBY)}`,
+
+  record: `
+    ${sheet(96, 50, 150, 210, 7)}
+    ${tick(232, 236, 20)}
+    ${arrow(266, 150, 60)}
+    ${chip(336, 136, 'ACT ON IT', EMERALD)}`,
+
+  plan: `
+    ${floor()}
+    ${worker('think', { x: 70, y: 118 })}
+    <g transform="translate(250 60)">
+      <rect x="0" y="0" width="180" height="120" rx="18" fill="var(--bg-raised)" stroke="${INK}" stroke-opacity="0.2" stroke-width="2"/>
+      <text x="74" y="76" fill="${OCEAN}" font-family="var(--font-heading)" font-size="52" font-weight="700">?</text>
+    </g>
+    <circle cx="212" cy="176" r="7" fill="${OCEAN}" opacity="0.5"/>
+    <circle cx="228" cy="196" r="5" fill="${OCEAN}" opacity="0.35"/>`,
+
+  feet: `
+    <ellipse cx="240" cy="182" rx="150" ry="86" fill="var(--bg-raised)"/>
+    <g>
+      <rect x="182" y="120" width="34" height="76" rx="17" fill="${OCEAN}"/>
+      <rect x="252" y="150" width="34" height="76" rx="17" fill="${OCEAN}"/>
+      ${arrow(300, 158, 60, EMERALD)}
+    </g>
+    ${chip(96, 60, 'SHOULDER WIDTH')}
+    ${chip(232, 252, 'LEAD FOOT FORWARD', EMERALD)}`,
+
+  grip: `
+    ${box(160, 120, 150, 120, ICE)}
+    <g fill="${SKIN}" stroke="${INK}" stroke-opacity="0.3" stroke-width="2">
+      <rect x="128" y="196" width="46" height="26" rx="13"/>
+      <rect x="296" y="122" width="46" height="26" rx="13"/>
+    </g>
+    ${tick(240, 72, 20)}
+    ${chip(96, 258, 'OPPOSITE CORNERS')}`,
+
+  lift: `
+    ${floor()}
+    ${worker('squat', { x: 40, y: 118 })}
+    ${box(58, 210, 46, 36)}
+    ${arrow(160, 190, 46, EMERALD)}
+    ${worker('carry', { x: 236, y: 118 })}
+    ${box(292, 186, 46, 36)}
+    ${tick(400, 96, 22)}`,
+
+  carry: `
+    ${floor()}
+    ${worker('carry', { x: 70, y: 118 })}
+    ${box(126, 186, 48, 38)}
+    ${tick(196, 96, 18)}
+    ${worker('stand', { x: 280, y: 118 })}
+    ${box(338, 158, 48, 38)}
+    ${cross(400, 100, 18)}`,
+
+  turn: `
+    ${floor()}
+    ${worker('carry', { x: 176, y: 118, s: 1.1 })}
+    ${box(238, 190, 50, 40)}
+    <path d="M132 258 a80 46 0 0 0 216 0" fill="none" stroke="${EMERALD}" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 12"/>
+    ${chip(30, 76, 'MOVE THE FEET', EMERALD)}
+    ${chip(288, 76, 'DO NOT TWIST', RUBY)}`,
+
+  setdown: `
+    ${floor()}
+    ${worker('squat', { x: 130, y: 118, s: 1.1 })}
+    ${box(224, 214, 56, 44)}
+    ${arrow(320, 150, 40, OCEAN)}
+    ${chip(276, 200, 'THEN ADJUST')}`,
+
+  shelf: `
+    ${floor()}
+    <g stroke="${INK}" stroke-opacity="0.35" stroke-width="5" stroke-linecap="round">
+      <line x1="270" y1="90" x2="440" y2="90"/>
+      <line x1="270" y1="160" x2="440" y2="160"/>
+      <line x1="272" y1="90" x2="272" y2="268"/>
+      <line x1="436" y1="90" x2="436" y2="268"/>
+    </g>
+    ${box(300, 118, 44, 38)}
+    <g fill="${OCEAN}">
+      <rect x="150" y="214" width="86" height="12" rx="6"/>
+      <rect x="164" y="240" width="58" height="12" rx="6"/>
+    </g>
+    ${worker('stand', { x: 120, y: 88, s: 0.92 })}
+    ${chip(30, 118, 'USE STEPS', EMERALD)}`,
+
+  team: `
+    ${floor()}
+    ${worker('carry', { x: 50, y: 118 })}
+    ${worker('carry', { x: 300, y: 118, flip: true })}
+    <rect x="112" y="186" width="230" height="22" rx="8" fill="${ICE}" stroke="${INK}" stroke-opacity="0.35" stroke-width="2"/>
+    ${chip(150, 68, 'ONE PERSON CALLS IT')}`,
+
+  push: `
+    ${floor()}
+    ${worker('push', { x: 70, y: 118 })}
+    ${trolley(176, 170)}
+    ${box(184, 152, 78, 62)}
+    ${arrow(300, 190, 80, EMERALD)}
+    ${chip(272, 76, 'PUSH, NOT PULL', EMERALD)}`,
+
+  aids: `
+    ${floor()}
+    ${trolley(70, 172)}
+    ${box(78, 164, 60, 50)}
+    <g transform="translate(210 150)">
+      <rect x="0" y="40" width="96" height="16" rx="8" fill="${OCEAN}"/>
+      <circle cx="18" cy="66" r="10" fill="${INK}"/>
+      <circle cx="78" cy="66" r="10" fill="${INK}"/>
+      <rect x="20" y="0" width="56" height="40" rx="6" fill="${ICE}" stroke="${INK}" stroke-opacity="0.3" stroke-width="2"/>
+    </g>
+    <g transform="translate(360 90)">
+      <line x1="0" y1="0" x2="0" y2="58" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M-18 58 h36 l-8 34 h-20 z" fill="${TANG}"/>
+      <line x1="-30" y1="0" x2="30" y2="0" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>
+    </g>`,
+
+  stop: `
+    ${floor()}
+    ${worker('ache', { x: 90, y: 118 })}
+    <g transform="translate(300 150)">
+      <circle cx="0" cy="0" r="52" fill="${RUBY}"/>
+      <rect x="-30" y="-9" width="60" height="18" rx="9" fill="#ffffff"/>
+    </g>
+    ${chip(232, 246, 'STOP AND REPORT', RUBY)}`,
+
+  summary: `
+    ${sheet(150, 48, 180, 220, 6)}
+    ${tick(316, 244, 22)}
+    ${chip(60, 120, 'TASK')}
+    ${chip(60, 172, 'LOAD', EMERALD)}`,
+
+  quiz: `
+    <rect x="96" y="60" width="288" height="200" rx="20" fill="${OCEAN}"/>
+    <text x="196" y="196" fill="#ffffff" font-family="var(--font-heading)" font-size="110" font-weight="700">?</text>`,
+
+  result: `
+    <g transform="translate(240 158)">
+      <circle cx="0" cy="0" r="86" fill="none" stroke="${ICE}" stroke-width="20"/>
+      <path d="M0 -86 a86 86 0 0 1 74 129" fill="none" stroke="${EMERALD}" stroke-width="20" stroke-linecap="round"/>
+      <text x="-44" y="16" fill="${INK}" font-family="var(--font-heading)" font-size="44" font-weight="700">100%</text>
+    </g>`,
+};
+
+const scene = SCENES[name] ?? floor();
+---
+
+<figure class:list={['illus', className]}>
+  <svg viewBox="0 0 480 320" role="img" aria-label={alt} preserveAspectRatio="xMidYMid meet">
+    <Fragment set:html={scene} />
+  </svg>
+</figure>
+
+<style>
+  .illus {
+    margin: 0;
+    padding: var(--space-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-raised);
+  }
+
+  .illus svg {
+    width: 100%;
+    height: auto;
+  }
+</style>
